@@ -8,25 +8,50 @@ const getTag = function(id) {
 	return shopifycategory[id];
 }
 const getOptionValue = function(id) {
-	return shopifyoptionvalues[id];
+	return shopifyoptionvalues[id].name;
 }
 const getOptionName = function(id) {
-	return shopifyoptionnames[shopifyoptionvalues[id].optioncat];
+	var catid = shopifyoptionvalues[id].optioncat;
+	return shopifyoptionnames[catid];
+}
+//POST a new product
+const postShopifyProduct = function(product) {
+		var jsonProduct = {"product": product};
+		var data = JSON.stringify(jsonProduct);
+
+	var xhr = new XMLHttpRequest();
+	xhr.withCredentials = true;
+
+	xhr.addEventListener("readystatechange", function () {
+	  if (this.readyState === 4) {
+	    console.log(this.responseText);
+	  }
+	});
+
+	xhr.open("POST", "https://__apiKey:__password@kjamson.myshopify.com/admin/products.json");
+	xhr.setRequestHeader("Content-Type", "application/json");
+	xhr.setRequestHeader("Cache-Control", "no-cache");
+	xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
+
+	xhr.send(data);
 }
 
 volusionproducts.then(function(products) {
 	var parentproductcode;
 	var parentproductindex;
 	var isFirstChild;
-	var tags = new Array();
 
 	products.forEach(function(product, index){
+		var optionname = "";
+		var tags = new Array();
+		var optionvalues = new Array();
 		// console.log("inside the foreach now");  //testing purpose
 		//identify parent product (productcode, index)
 		// console.log("The productcode is: " + product.ischildofproductcode);  //testing purpose
 		if(product.ischildofproductcode=="") {
 			isFirstChild = true; //if the current product's ischildofproductcode equals to "" meaning the next product could be child product
 			// console.log("isFirstChild: " + isFirstChild);	//tesing purpose
+			if(!parentproductcode) postShopifyProduct(shopifyproducts.products[parentproductindex]);
 			parentproductcode = product.productcode;
 			parentproductindex = index;
 			// console.log(parentproductcode, parentproductindex);	//testing purpose
@@ -37,24 +62,62 @@ volusionproducts.then(function(products) {
 				tags.push(getTag(categoryid));
 			});
 
-			//if it is parent product, add one more product to JSON object
-			shopifyproducts.products.push({
-				"title": product.productname,
-				"body_html": product.productdescription,
-				"product_type": product.categorytree,
-				"vendor": product.productmanufacturer,
-				"tags": tags.join(", ")
-			});
+			//convert optionids to otpionvalues
+			product.optionids.split(",").forEach(function	(optionid, index){
+				optionname = !optionname?getOptionName(optionid):optionname;
+				// console.log(optionname);	//testing purpose
+				// console.log(getOptionValue(optionid)); //Testing purpose
+				optionvalues.push(getOptionValue(optionid));
+			})
+
+			if(product.optionids!=""){ //if current product has set options
+
+				//if it is parent product, add one more product to JSON object
+				shopifyproducts.products.push({
+					"title": product.productname,
+					"body_html": product.productdescription,
+					"product_type": product.categorytree,
+					"vendor": product.productmanufacturer,
+					"tags": tags.join(", "),
+					"options": [
+						{
+							"name": optionname,
+							"values": optionvalues
+						}
+					]
+				});
+			}
+			console.log(product.optionids + " : " + optionvalues + "\n" + product.categoryids + " : " + tags);	//testing purpose
 			// console.log(shopifyproducts);		//testing purpose
 		} else if(product.ischildofproductcode === parentproductcode){ 		//if it is child product, match the ischildofproductcode with the parent ProductCode
-		if(isFirstChild){
-			isFirstChild = false;		//the current product is the first child product of the last product
-			shopifyproducts.products[parentproductindex].variants = [];
-			shopifyproducts.products[parentproductindex].variants.push();
-		} else{
-			shopifyproducts.products[parentproductindex].variants.push();
+				if(isFirstChild){
+					isFirstChild = false;		//the current product is the first child product of the last product
+					shopifyproducts.products[parentproductindex].variants = [];
+					shopifyproducts.products[parentproductindex].variants.push(
+						{
+							"title": product.productname.split(" - ")[1],
+							"option1": product.productname.split(" - ")[1],
+							"price": product.saleprice?product.saleprice:product.productprice,
+							"compare_at_price": product.saleprice?product.productprice:null,
+							"sku": product.productcode,
+							"inventory_quantity": product.stockstatus,
+							"requires_shipping": product.freeshippingitem==="Y"?true:false
+						}
+					);
+				} else{
+					shopifyproducts.products[parentproductindex].variants.push(
+						{
+							"title": product.productname.split(" - ")[1],
+							"option1": product.productname.split(" - ")[1],
+							"price": product.saleprice?product.saleprice:product.productprice,
+							"compare_at_price": product.saleprice?product.productprice:null,
+							"sku": product.productcode,
+							"inventory_quantity": product.stockstatus,
+							"requires_shipping": product.freeshippingitem==="Y"?true:false
+						}
+					);
+				}
 		}
-	}
 
 
 		// if(products[index+1].ischildofproductcode === product.productcode) {}
