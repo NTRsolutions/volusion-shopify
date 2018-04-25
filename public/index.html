@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <title>CSV to JSON</title>
+    <script src="https://d3js.org/d3.v5.js"></script>
+    <script type="text/javascript">
+      // const d3 = require("d3");
+      d3.csv("/csv", function(data) {
+        console.log(data[0]);
+      })
+    </script>
+  </head>
+  <body>
+  </body>
+</html>
