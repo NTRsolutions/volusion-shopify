@@ -5,7 +5,7 @@ var http = require('http');
 const express = require('express');
 const app = express();
 
-app.use(express.static("/public"));
+app.use("/public", express.static(__dirname + "/public"));
 
 // var csvFile = fs.readFile('./cities');
 
