@@ -3,9 +3,8 @@ const shopifyAPI = require('shopify-node-api');
 
 // const options = {
 // shopName: 'KJmanson',
-// apiKey: 'b9f585c1a3cd6fa1a193d9f135001f16',
-// password: '07b794904f620b38dde2132b859c8534'
-// // accessToken: 'e24cbcf7ef6274d573a1dd4e16cc2ab2'
+// apiKey: SHOPIFY_APP_KEY,
+// password: SHOPIFY_APP_SECRET
 // }
 //
 // var kjamson = new Shopify(options);
@@ -15,9 +14,8 @@ const shopifyAPI = require('shopify-node-api');
 
 const config = {
 shop: 'kjmanson',
-shopify_api_key: 'b9f585c1a3cd6fa1a193d9f135001f16',
-access_token: '07b794904f620b38dde2132b859c8534'
-// accessToken: 'e24cbcf7ef6274d573a1dd4e16cc2ab2'
+shopify_api_key: 'SHOPIFY_APP_KEY',
+access_token: 'SHOPIFY_APP_SECRET'
 }
 
 var kjamson = new shopifyAPI(config);
