@@ -23,7 +23,7 @@ const request  = require('request-promise');
 // } = process.env;
 const apiKey = process.env.SHOPIFY_APP_KEY;
 const apiSecret = process.env.SHOPIFY_APP_SECRET;
-const scopes = 'read_products';
+const scopes = 'read_products, write_products';
 const forwardingAddress = process.env.SHOPIFY_APP_HOST;
 
 app.use("/public", express.static(__dirname + "/public"));
@@ -144,16 +144,39 @@ app.get('/shopify/callback', (req, res) => {
       const accessToken = accessTokenResponse.access_token;
       //Use access token to make API call to 'shop' endpoint
 
-      const shopRequestUrl = 'https://' + shop + '/admin/products.json';
+      // const shopRequestUrl = 'https://' + shop + '/admin/products.json';
+      // const shopRequestHeaders = {
+      //   'X-Shopify-Access-Token': accessToken,
+      // };
+      //
+      // request.get(shopRequestUrl, {headers: shopRequestHeaders})
+      // .then( shopResponse => {
+      //   res.send(shopResponse);
+      // })
+      const newProduct = {
+   "product": {
+      "title": "Pacsafe Cashsafe™ Anti-Theft Travel Belt Wallet",
+      "body_html": "<span style=\"font-family: robotomedium;\"><inline style=\"font-family: Arial;\">The Cashsafe™ anti-theft travel belt outsmarts thieves at their own game. Great for stashing extra cash and keeping it hidden from view. The Cashsafe™ has a plastic buckle which means there's no need to remove it when passing through airport security. Adjustable and easy to use, it looks like a normal belt, but it's much smarter!<\/inline><\/span>",
+      "product_type": "Accessories",
+      "vendor": "Pacsafe",
+      "tags": "Accessories, Travel Accessories, Pacsafe, Travel Security",
+      "options": [
+         {
+            "name": "Color",
+            "values": [
+               "Black"
+            ]
+         }
+      ]
+   }
+};
+      const createProductUrl = 'https://' + shop + "/admin/products.json";
       const shopRequestHeaders = {
         'X-Shopify-Access-Token': accessToken,
       };
-
-      request.get(shopRequestUrl, {headers: shopRequestHeaders})
-      .then( shopResponse => {
-        res.send(shopResponse);
-      })
-      .catch( err => res.status(err.statusCode).send(err.error.error_description));
+      request.post(createProductUrl, {json: newProduct, headers: shopRequestHeaders})
+      .then(res => res.send(res))
+      .catch( err => res.send(err));
     })
     .catch( err => {
       res.status(err.statusCode).send(err.error.error_description);
