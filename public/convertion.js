@@ -49,10 +49,10 @@ volusionproducts.then(function(products) {
 		// console.log("inside the foreach now");  //testing purpose
 		//identify parent product (productcode, index)
 		// console.log("The productcode is: " + product.ischildofproductcode);  //testing purpose
-		if(product.ischildofproductcode=="") {
-			isFirstChild = true; //if the current product's ischildofproductcode equals to "" meaning the next product could be child product
+		if(product.ischildofproductcode=="") {//if the current product's ischildofproductcode equals to "" meaning the next product could be child product
+			isFirstChild = true;
 			// console.log("isFirstChild: " + isFirstChild);	//tesing purpose
-			if(!parentproductcode) postShopifyProduct(shopifyproducts.products[parentproductindex]);
+			//if(!parentproductcode) postShopifyProduct(shopifyproducts.products[parentproductindex]);// if current product does not have parent product POSR it to shopify
 			parentproductcode = product.productcode;
 			parentproductindex = index;
 			// console.log(parentproductcode, parentproductindex);	//testing purpose
@@ -75,26 +75,43 @@ volusionproducts.then(function(products) {
 
 				//if it is parent product, add one more product to JSON object
 				shopifyproducts.products.push({
-					"title": product.productname,
-					"body_html": product.productdescription,
-					"product_type": product.categorytree,
-					"vendor": product.productmanufacturer,
-					"tags": tags.join(", "),
-					"options": [
-						{
-							"name": optionname,
-							"values": optionvalues
-						}
-					]
+					"product": {
+						"title": product.productname,
+						"body_html": product.productdescription,
+						"product_type": product.categorytree,
+						"vendor": product.productmanufacturer,
+						"metafields_global_title_tag": product.productname + " | Luggage City",
+						"tags": tags.join(", "),
+						"metafields": [
+							{
+								"namespace": "Product",
+								"key": "Features",
+								"value": product.features,
+								"value_type": "string"
+							},
+							{
+								"namespace": "Product",
+								"key": "Specifications",
+								"value": product.techspecs,
+								"value_type": "string"
+							}
+						],
+						"options": [
+							{
+								"name": optionname,
+								"values": optionvalues
+							}
+						]
+					}
 				});
 			}
 			console.log(product.optionids + " : " + optionvalues + "\n" + product.categoryids + " : " + tags);	//testing purpose
 			// console.log(shopifyproducts);		//testing purpose
-		} else if(product.ischildofproductcode === parentproductcode){ 		//if it is child product, match the ischildofproductcode with the parent ProductCode
-				if(isFirstChild){
-					isFirstChild = false;		//the current product is the first child product of the last product
-					shopifyproducts.products[parentproductindex].variants = [];
-					shopifyproducts.products[parentproductindex].variants.push(
+		} else if(product.ischildofproductcode === parentproductcode){ 		//the current product is a child product and its parent code is parentproductcode
+				if(isFirstChild){	//the current product is the first child product of the parent product
+					isFirstChild = false;
+					shopifyproducts.products[parentproductindex].product.variants = [];
+					shopifyproducts.products[parentproductindex].product.variants.push(
 						{
 							"title": product.productname.split(" - ")[1],
 							"option1": product.productname.split(" - ")[1],
@@ -105,8 +122,8 @@ volusionproducts.then(function(products) {
 							"requires_shipping": product.freeshippingitem==="Y"?true:false
 						}
 					);
-				} else{
-					shopifyproducts.products[parentproductindex].variants.push(
+				} else{	//the current product is not the first child product of the parent product
+					shopifyproducts.products[parentproductindex].product.variants.push(
 						{
 							"title": product.productname.split(" - ")[1],
 							"option1": product.productname.split(" - ")[1],
@@ -119,12 +136,5 @@ volusionproducts.then(function(products) {
 					);
 				}
 		}
-
-
-		// if(products[index+1].ischildofproductcode === product.productcode) {}
-		//add the children product to parent product variant
-		// shopifyproducts.products[parentproductindex].variant = []
-		// return; //go to next iteration element
-
 	})
 })
