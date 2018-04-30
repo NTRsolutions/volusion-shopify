@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "@shopify/shopify-express": "^1.0.0-alpha.7",
+    "browserify": "^16.2.0",
     "connect": "^3.6.6",
     "cookie": "^0.3.1",
     "crypto": "^1.0.1",
