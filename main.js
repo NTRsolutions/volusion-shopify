@@ -1,4 +1,4 @@
-// const d3 = require("d3");
+const d3 = require("d3");
 // const Papa = require("papaparse");
 const fs = require('fs');
 const dotenv = require('dotenv').config();
@@ -12,8 +12,134 @@ const cookie = require('cookie')
 const querystring = require('querystring');
 const crypto = require('crypto');
 const request  = require('request-promise');
+const csv = "./public/cities.csv";
+const volusionproducts = d3.csv('http://localhost:3000/csv');
+const optCat = require('./public/optCat');
+const shopifycategory = optCat.shopifycategory;
+const shopifyoptionnames = optCat.shopifyoptionnames;
+const shopifyoptionvalues = optCat.shopifyoptionvalues;
+const shopifyproducts = new Array();
 
+const getTag = function(id) {
+	return shopifycategory[id];
+}
+const getOptionValue = function(id) {
+	return shopifyoptionvalues[id].name;
+}
+const getOptionName = function(id) {
+	var catid = shopifyoptionvalues[id].optioncat;
+	return shopifyoptionnames[catid];
+}
 
+var volusionToShopify = function(product, index){
+	var optionname = "";
+	var tags = new Array();
+	var optionvalues = new Array();
+	// console.log("inside the foreach now");  //testing purpose
+	//identify parent product (productcode, index)
+	// console.log("The productcode is: " + product.ischildofproductcode);  //testing purpose
+	if(product.ischildofproductcode=="") {//if the current product's ischildofproductcode equals to "" meaning the next product could be child product
+		isFirstChild = true;
+		// console.log("isFirstChild: " + isFirstChild);	//tesing purpose
+		//if(!parentproductcode) postShopifyProduct(shopifyproducts[parentproductindex]);// if current product does not have parent product POSR it to shopify
+		parentproductcode = product.productcode;
+		parentproductindex = index;
+		// console.log(parentproductcode, parentproductindex);	//testing purpose
+
+		//convert categoryids to categoryname
+		product.categoryids.split(",").forEach(function(categoryid){
+			// console.log(getTag(categoryid)); //Testing purpose
+			tags.push(getTag(categoryid));
+		});
+
+		//convert optionids to otpionvalues
+		product.optionids.split(",").forEach(function	(optionid, index){
+			optionname = !optionname?getOptionName(optionid):optionname;
+			// console.log(optionname);	//testing purpose
+			// console.log(getOptionValue(optionid)); //Testing purpose
+			optionvalues.push(getOptionValue(optionid));
+		})
+
+		// if(product.optionids!=""){ //if current product has set options
+			shopifyproducts.push({
+				"product": {
+					"title": product.productname,
+					"body_html": product.productdescription,
+					"product_type": product.categorytree,
+					"vendor": product.productmanufacturer,
+					"metafields_global_title_tag": product.productname + " | Luggage City",
+					"tags": tags.join(", "),
+					"metafields": [
+						{
+							"namespace": "Product",
+							"key": "Features",
+							"value": product.features,
+							"value_type": "string"
+						},
+						{
+							"namespace": "Product",
+							"key": "Specifications",
+							"value": product.techspecs,
+							"value_type": "string"
+						}
+					],
+					"options": [
+						{
+							"name": optionname,
+							"values": optionvalues
+						}
+					],
+					"images": []
+				}
+			});
+			for(i=2; i<11; i++) {
+				shopifyproducts[index].product.images.push({
+					"src": product.photourl.replace(/-\d/g, '-'+i)
+				})
+			}
+		// }
+		// console.log(product.optionids + " : " + optionvalues + "\n" + product.categoryids + " : " + tags);	//testing purpose
+		// console.log(shopifyproducts);		//testing purpose
+	} else if(product.ischildofproductcode === parentproductcode){ 		//the current product is a child product and its parent code is parentproductcode
+			if(isFirstChild){	//the current product is the first child product of the parent product
+				isFirstChild = false;
+				shopifyproducts[parentproductindex].product.variants = [];
+				shopifyproducts[parentproductindex].product.variants.push(
+					{
+						"title": product.productname.split(" - ")[1],
+						"option1": product.productname.split(" - ")[1],
+						"price": product.saleprice?product.saleprice:product.productprice,
+						"compare_at_price": product.saleprice?product.productprice:null,
+						"sku": product.productcode,
+						"inventory_quantity": product.stockstatus,
+						"requires_shipping": product.freeshippingitem==="Y"?true:false
+					}
+				);
+			} else{	//the current product is not the first child product of the parent product
+				shopifyproducts[parentproductindex].product.variants.push(
+					{
+						"title": product.productname.split(" - ")[1],
+						"option1": product.productname.split(" - ")[1],
+						"price": product.saleprice?product.saleprice:product.productprice,
+						"compare_at_price": product.saleprice?product.productprice:null,
+						"sku": product.productcode,
+						"inventory_quantity": product.stockstatus,
+						"requires_shipping": product.freeshippingitem==="Y"?true:false
+					}
+				);
+			}
+	}
+}
+volusionproducts.then(function(products) {
+	var parentproductcode;
+	var parentproductindex;
+	var isFirstChild;
+	for(index=0; index<products.length; index++)
+	{
+		volusionToShopify(products[index], index);
+	}
+
+})
 //
 // const {
 //   SHOPIFY_APP_KEY,
@@ -27,53 +153,6 @@ const scopes = 'read_products, write_products';
 const forwardingAddress = process.env.SHOPIFY_APP_HOST;
 
 app.use("/public", express.static(__dirname + "/public"));
-
-//seesion is necessary for api proxy and auth verification
-// app.use(session({secret: SHOPIFY_APP_SECRET}));
-//
-// const {routes, withShop} = shopifyExpress({
-//   host: SHOPIFY_APP_HOST,
-//   apiKey: SHOPIFY_APP_KEY,
-//   secret: SHOPIFY_APP_SECRET,
-//   scope: ['write_orders, write_products'],
-//   accessMode: 'offline',
-//   afterAuth(req, res) {
-//     const {session: {accessToken, shop}} = req;
-//     //install webhooks or hook into your own app here ??
-//     return res.redirect('/');
-//   }
-// });
-//
-// var _shopifyExpress = shopifyExpress({
-//   host: SHOPIFY_APP_HOST,
-//   apiKey: SHOPIFY_APP_KEY,
-//   secret: SHOPIFY_APP_SECRET,
-//   scope: ['write_orders, write_products'],
-//   accessMode: 'offline',
-//   afterAuth: function afterAuth(req, res) {
-//     var _req$session = req.session,
-//         accessToken = _req$session.accessToken,
-//         shop = _req$session.shop;
-//     //install webhooks or hook into your own app here ??
-//
-//     return res.redirect('/');
-//   }
-// }),
-//     routes = _shopifyExpress.routes,
-//     withShop = _shopifyExpress.withShop;
-//
-//
-// var test = "testing, testing1, testing2";
-//
-// test.split(", ").forEach(data => console.log(data));
-//
-// console.log(withShop)
-//
-// app.use('/shopify', routes);
-// app.use('/myApp', withShop({authBaseUrl: '/shopfify'}), myAppMiddleware)
-
-// var csvFile = fs.readFile('./cities');
-
 
 //intall route
 app.get('/shopify', (req, res) => {
@@ -153,30 +232,36 @@ app.get('/shopify/callback', (req, res) => {
       // .then( shopResponse => {
       //   res.send(shopResponse);
       // })
-      const newProduct = {
-   "product": {
-      "title": "Pacsafe Cashsafe™ Anti-Theft Travel Belt Wallet",
-      "body_html": "<span style=\"font-family: robotomedium;\"><inline style=\"font-family: Arial;\">The Cashsafe™ anti-theft travel belt outsmarts thieves at their own game. Great for stashing extra cash and keeping it hidden from view. The Cashsafe™ has a plastic buckle which means there's no need to remove it when passing through airport security. Adjustable and easy to use, it looks like a normal belt, but it's much smarter!<\/inline><\/span>",
-      "product_type": "Accessories",
-      "vendor": "Pacsafe",
-      "tags": "Accessories, Travel Accessories, Pacsafe, Travel Security",
-      "options": [
-         {
-            "name": "Color",
-            "values": [
-               "Black"
-            ]
-         }
-      ]
-   }
-};
+      // const newProduct = {
+      //    "product": {
+      //       "title": "Pacsafe Cashsafe™ Anti-Theft Travel Belt Wallet",
+      //       "body_html": "<span style=\"font-family: robotomedium;\"><inline style=\"font-family: Arial;\">The Cashsafe™ anti-theft travel belt outsmarts thieves at their own game. Great for stashing extra cash and keeping it hidden from view. The Cashsafe™ has a plastic buckle which means there's no need to remove it when passing through airport security. Adjustable and easy to use, it looks like a normal belt, but it's much smarter!<\/inline><\/span>",
+      //       "product_type": "Accessories",
+      //       "vendor": "Pacsafe",
+      //       "tags": "Accessories, Travel Accessories, Pacsafe, Travel Security",
+      //       "options": [
+      //          {
+      //             "name": "Color",
+      //             "values": [
+      //                "Black"
+      //             ]
+      //          }
+      //       ]
+      //    }
+      // };
       const createProductUrl = 'https://' + shop + "/admin/products.json";
       const shopRequestHeaders = {
         'X-Shopify-Access-Token': accessToken,
       };
-      request.post(createProductUrl, {json: newProduct, headers: shopRequestHeaders})
-      .then(res => res.send(res))
-      .catch( err => res.send(err));
+      for(i=0; i<shopifyproducts.length; i++)
+      {
+        request.post(createProductUrl, {json: shopifyproducts[i], headers: shopRequestHeaders})
+        .then(res => res.send(res))
+        .catch( err => res.send(err));
+      }
+      // request.post(createProductUrl, {json: newProduct, headers: shopRequestHeaders})
+      // .then(res => res.send(res))
+      // .catch( err => res.send(err));
     })
     .catch( err => {
       res.status(err.statusCode).send(err.error.error_description);
@@ -195,7 +280,7 @@ app.get("/csv", function(req, res){
 })
 
 app.listen(3000, function(){
-  console.log('Example app listening on port 3000!')
+  console.log('Example app listening on port 3000!');
 })
 
 // d3.csv('/cities.csv');
