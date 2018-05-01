@@ -15,10 +15,16 @@ const getTag = function(id) {
 const getOptionValue = function(id) {
 	return shopifyoptionvalues[id].name;
 }
-const getOptionName = function(id) {
-	var catid = shopifyoptionvalues[id].optioncat;
-	return shopifyoptionnames[catid];
+const getOptionName = function(id){
+	return new Promise((resolve, reject) => {
+		var catid = shopifyoptionvalues[id].optioncat!==undefined?shopifyoptionvalues[id].optioncat:undefined;
+		if(catid) resolve(catid)
+		else if(catid===undefined) reject("Current option id is: " + id);
+		// return shopifyoptionnames[catid];
+	})
 }
+
+
 var volusionToShopify = function(product, index){
 	var optionname = "";
 	var tags = new Array();
@@ -31,7 +37,10 @@ var volusionToShopify = function(product, index){
 		// console.log("isFirstChild: " + isFirstChild);	//tesing purpose
 		//if(!parentproductcode) postShopifyProduct(shopifyproducts[parentproductindex]);// if current product does not have parent product POSR it to shopify
 		parentproductcode = product.productcode;
-		parentproductindex = index;
+		parentproductindex = shopifyproducts.length;
+		console.log("The index of volusionproducts: " + index + "\n"
+								+ "The index of the shopifyproducts: " + shopifyproducts.length + "\n"
+								+ "The index of the parentproduct: " + parentproductindex);
 		// console.log(parentproductcode, parentproductindex);	//testing purpose
 
 		//convert categoryids to categoryname
@@ -42,7 +51,7 @@ var volusionToShopify = function(product, index){
 
 		//convert optionids to otpionvalues
 		product.optionids.split(",").forEach(function	(optionid, index){
-			optionname = !optionname?getOptionName(optionid):optionname;
+			optionname = !optionname?getOptionName(optionid, err => {if(err) console.log(err)}):optionname;
 			// console.log(optionname);	//testing purpose
 			// console.log(getOptionValue(optionid)); //Testing purpose
 			optionvalues.push(getOptionValue(optionid));
@@ -81,7 +90,9 @@ var volusionToShopify = function(product, index){
 				}
 			});
 			for(i=2; i<11; i++) {
-				shopifyproducts[index].product.images.push({
+				// console.log(parentproductindex)
+				// if(shopifyproducts[parentproductindex]) console.log(index)
+				shopifyproducts[parentproductindex].product.images.push({
 					"src": product.photourl.replace(/-\d/g, '-'+i)
 				})
 			}
