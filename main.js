@@ -26,10 +26,16 @@ const getTag = function(id) {
 const getOptionValue = function(id) {
 	return shopifyoptionvalues[id].name;
 }
-const getOptionName = function(id) {
-	var catid = shopifyoptionvalues[id].optioncat;
-	return shopifyoptionnames[catid];
+const getOptionName = function(id){
+	return new Promise((resolve, reject) => {
+		// var catid = shopifyoptionvalues[id].optioncat!==undefined?shopifyoptionvalues[id].optioncat:undefined;
+		if(shopifyoptionvalues[id].optioncat === undefined) { reject("Current option id is: " + id); }
+		// if(catid) resolve(catid)
+		else { resolve(shopifyoptionvalues[id].optioncat)}
+		// return shopifyoptionnames[catid];
+	})
 }
+
 
 var volusionToShopify = function(product, index){
 	var optionname = "";
@@ -43,8 +49,10 @@ var volusionToShopify = function(product, index){
 		// console.log("isFirstChild: " + isFirstChild);	//tesing purpose
 		//if(!parentproductcode) postShopifyProduct(shopifyproducts[parentproductindex]);// if current product does not have parent product POSR it to shopify
 		parentproductcode = product.productcode;
-		parentproductindex = index;
-		// console.log(parentproductcode, parentproductindex);	//testing purpose
+		parentproductindex = shopifyproducts.length;
+		// console.log("The index of volusionproducts: " + index + " " + product.productcode + "\n"
+		// 						+ "The index of the shopifyproducts: " + shopifyproducts.length + "\n"
+		// 						+ "The index of the parentproduct: " + parentproductindex);
 
 		//convert categoryids to categoryname
 		product.categoryids.split(",").forEach(function(categoryid){
@@ -54,10 +62,12 @@ var volusionToShopify = function(product, index){
 
 		//convert optionids to otpionvalues
 		product.optionids.split(",").forEach(function	(optionid, index){
-			optionname = !optionname?getOptionName(optionid):optionname;
-			// console.log(optionname);	//testing purpose
-			// console.log(getOptionValue(optionid)); //Testing purpose
-			optionvalues.push(getOptionValue(optionid));
+			if(optionid) {
+				optionname = getOptionName(optionid).catch( err => console.log(err));
+				optionvalues.push(getOptionValue(optionid));
+			} else {
+				optionname = "";
+			}
 		})
 
 		// if(product.optionids!=""){ //if current product has set options
@@ -93,7 +103,9 @@ var volusionToShopify = function(product, index){
 				}
 			});
 			for(i=2; i<11; i++) {
-				shopifyproducts[index].product.images.push({
+				// console.log(parentproductindex)
+				// if(shopifyproducts[parentproductindex]) console.log(index)
+				shopifyproducts[parentproductindex].product.images.push({
 					"src": product.photourl.replace(/-\d/g, '-'+i)
 				})
 			}
