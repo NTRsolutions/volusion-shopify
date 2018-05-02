@@ -17,9 +17,10 @@ const getOptionValue = function(id) {
 }
 const getOptionName = function(id){
 	return new Promise((resolve, reject) => {
-		var catid = shopifyoptionvalues[id].optioncat!==undefined?shopifyoptionvalues[id].optioncat:undefined;
-		if(catid) resolve(catid)
-		else if(catid===undefined) reject("Current option id is: " + id);
+		// var catid = shopifyoptionvalues[id].optioncat!==undefined?shopifyoptionvalues[id].optioncat:undefined;
+		if(shopifyoptionvalues[id].optioncat === undefined) { reject("Current option id is: " + id); }
+		// if(catid) resolve(catid)
+		else { resolve(shopifyoptionvalues[id].optioncat)}
 		// return shopifyoptionnames[catid];
 	})
 }
@@ -38,9 +39,12 @@ var volusionToShopify = function(product, index){
 		//if(!parentproductcode) postShopifyProduct(shopifyproducts[parentproductindex]);// if current product does not have parent product POSR it to shopify
 		parentproductcode = product.productcode;
 		parentproductindex = shopifyproducts.length;
-		console.log("The index of volusionproducts: " + index + "\n"
+		console.log("The index of volusionproducts: " + index + " " + product.productcode + "\n"
 								+ "The index of the shopifyproducts: " + shopifyproducts.length + "\n"
 								+ "The index of the parentproduct: " + parentproductindex);
+
+														// + "The index of the shopifyproducts: " + shopifyproducts.length + " " + shopifyproducts[shopifyproducts.length].product.title + "\n"
+														// + "The index of the parentproduct: " + parentproductindex + " " + shopifyproducts[parentproductindex].product.title);
 		// console.log(parentproductcode, parentproductindex);	//testing purpose
 
 		//convert categoryids to categoryname
@@ -51,10 +55,12 @@ var volusionToShopify = function(product, index){
 
 		//convert optionids to otpionvalues
 		product.optionids.split(",").forEach(function	(optionid, index){
-			optionname = !optionname?getOptionName(optionid, err => {if(err) console.log(err)}):optionname;
-			// console.log(optionname);	//testing purpose
-			// console.log(getOptionValue(optionid)); //Testing purpose
-			optionvalues.push(getOptionValue(optionid));
+			if(optionid) {
+				optionname = getOptionName(optionid).catch( err => console.log(err));
+				optionvalues.push(getOptionValue(optionid));
+			} else {
+				optionname = "";
+			}
 		})
 
 		// if(product.optionids!=""){ //if current product has set options
