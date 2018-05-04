@@ -16,13 +16,7 @@ const getOptionValue = function(id) {
 	return shopifyoptionvalues[id].name;
 }
 const getOptionName = function(id){
-	return new Promise((resolve, reject) => {
-		// var catid = shopifyoptionvalues[id].optioncat!==undefined?shopifyoptionvalues[id].optioncat:undefined;
-		if(shopifyoptionvalues[id].optioncat === undefined) { reject("Current option id is: " + id); }
-		// if(catid) resolve(catid)
-		else { resolve(shopifyoptionvalues[id].optioncat)}
-		// return shopifyoptionnames[catid];
-	})
+		return shopifyoptionvalues[id].optioncat === undefined?"":shopifyoptionnames[shopifyoptionvalues[id].optioncat]
 }
 
 
@@ -30,6 +24,15 @@ var volusionToShopify = function(product, index){
 	var optionname = "";
 	var tags = new Array();
 	var optionvalues = new Array();
+	var nextProduct = product[index+1];
+	/*  To determine current product has a child or not
+	//					Current product					next product				result
+//							parentproduct						children						may have child
+	//						parentproduct						parentproduct					has no child
+	//						child										parent							last child
+	//						child  									child									not last child
+	*/
+
 	// console.log("inside the foreach now");  //testing purpose
 	//identify parent product (productcode, index)
 	// console.log("The productcode is: " + product.ischildofproductcode);  //testing purpose
@@ -56,12 +59,14 @@ var volusionToShopify = function(product, index){
 		//convert optionids to otpionvalues
 		product.optionids.split(",").forEach(function	(optionid, index){
 			if(optionid) {
-				optionname = getOptionName(optionid).catch( err => console.log(err));
+				// getOptionName(optionid).then( name => {  optionname = name; console.log('The name of option is: ' + optionname);} ).catch( err => console.log(err));
+				optionname = getOptionName(optionid);
 				optionvalues.push(getOptionValue(optionid));
 			} else {
 				optionname = "";
 			}
-		})
+		});
+
 
 		// if(product.optionids!=""){ //if current product has set options
 			shopifyproducts.push({
@@ -70,6 +75,7 @@ var volusionToShopify = function(product, index){
 					"body_html": product.productdescription,
 					"product_type": product.categorytree,
 					"vendor": product.productmanufacturer,
+					"published": product.hideproduct==="Y"?false:true,
 					"metafields_global_title_tag": product.productname + " | Luggage City",
 					"tags": tags.join(", "),
 					"metafields": [
@@ -117,6 +123,8 @@ var volusionToShopify = function(product, index){
 						"compare_at_price": product.saleprice?product.productprice:null,
 						"sku": product.productcode,
 						"inventory_quantity": product.stockstatus,
+						"inventory_management": "shopify",
+						"fulfillment_service": "manual",
 						"requires_shipping": product.freeshippingitem==="Y"?true:false
 					}
 				);
@@ -129,6 +137,8 @@ var volusionToShopify = function(product, index){
 						"compare_at_price": product.saleprice?product.productprice:null,
 						"sku": product.productcode,
 						"inventory_quantity": product.stockstatus,
+						"inventory_management": "shopify",
+						"fulfillment_service": "manual",
 						"requires_shipping": product.freeshippingitem==="Y"?true:false
 					}
 				);

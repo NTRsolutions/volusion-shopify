@@ -18,7 +18,7 @@ const optCat = require('./public/optCat');
 const shopifycategory = optCat.shopifycategory;
 const shopifyoptionnames = optCat.shopifyoptionnames;
 const shopifyoptionvalues = optCat.shopifyoptionvalues;
-const shopifyproducts = new Array();
+var shopifyproducts = new Array();
 
 const getTag = function(id) {
 	return shopifycategory[id];
@@ -27,27 +27,23 @@ const getOptionValue = function(id) {
 	return shopifyoptionvalues[id].name;
 }
 const getOptionName = function(id){
-	return new Promise((resolve, reject) => {
-		// var catid = shopifyoptionvalues[id].optioncat!==undefined?shopifyoptionvalues[id].optioncat:undefined;
-		if(shopifyoptionvalues[id].optioncat === undefined) { reject("Current option id is: " + id); }
-		// if(catid) resolve(catid)
-		else { resolve(shopifyoptionvalues[id].optioncat)}
-		// return shopifyoptionnames[catid];
-	})
+		return shopifyoptionvalues[id].optioncat === undefined?"":shopifyoptionnames[shopifyoptionvalues[id].optioncat]
 }
 
-
 var volusionToShopify = function(product, index){
-	var optionname = "";
+	var optionname = "1";
 	var tags = new Array();
 	var optionvalues = new Array();
-	// console.log("inside the foreach now");  //testing purpose
-	//identify parent product (productcode, index)
-	// console.log("The productcode is: " + product.ischildofproductcode);  //testing purpose
+	/*  To determine current product has a child or not
+	//					Current product					next product				result
+//							parentproduct						children						may have child
+	//						parentproduct						parentproduct					has no child
+	//						child										parent							last child
+	//						child  									child									not last child
+	*/
+
 	if(product.ischildofproductcode=="") {//if the current product's ischildofproductcode equals to "" meaning the next product could be child product
 		isFirstChild = true;
-		// console.log("isFirstChild: " + isFirstChild);	//tesing purpose
-		//if(!parentproductcode) postShopifyProduct(shopifyproducts[parentproductindex]);// if current product does not have parent product POSR it to shopify
 		parentproductcode = product.productcode;
 		parentproductindex = shopifyproducts.length;
 		// console.log("The index of volusionproducts: " + index + " " + product.productcode + "\n"
@@ -63,13 +59,14 @@ var volusionToShopify = function(product, index){
 		//convert optionids to otpionvalues
 		product.optionids.split(",").forEach(function	(optionid, index){
 			if(optionid) {
-				optionname = getOptionName(optionid).catch( err => console.log(err));
+				// getOptionName(optionid).then( name => {  optionname = name; console.log('The name of option is: ' + optionname);} ).catch( err => console.log(err));
+				optionname = getOptionName(optionid);
 				optionvalues.push(getOptionValue(optionid));
 			} else {
 				optionname = "";
 			}
-		})
-
+		});
+		// optionname.then(value => console.log(value))
 		// if(product.optionids!=""){ //if current product has set options
 			shopifyproducts.push({
 				"product": {
@@ -150,8 +147,11 @@ volusionproducts.then(function(products) {
 	{
 		volusionToShopify(products[index], index);
 	}
+	console.log('I am inside the convertion block ' + shopifyproducts.length)
 
 })
+
+console.log('I am outside of the convertion block '+shopifyproducts.length)
 //
 // const {
 //   SHOPIFY_APP_KEY,
@@ -194,7 +194,7 @@ app.get('/shopify/callback', (req, res) => {
   if(state !== stateCookie ){
     return res.status(403).send('Request orgin cannot be verified');
   }
-  console.log(shop + '\n' + hmac + '\n' + code);
+  // console.log(shop + '\n' + hmac + '\n' + code);
   if(shop && hmac && code) {
     //validate request is from Shopify using HMAC validation
     const map = Object.assign({}, req.query);
@@ -265,18 +265,26 @@ app.get('/shopify/callback', (req, res) => {
       const shopRequestHeaders = {
         'X-Shopify-Access-Token': accessToken,
       };
+			var result = new Array();
+			var error = new Array();
       for(i=0; i<shopifyproducts.length; i++)
       {
-        request.post(createProductUrl, {json: shopifyproducts[i], headers: shopRequestHeaders})
-        .then(res => res.send(res))
-        .catch( err => res.send(err));
+        if(shopifyproducts[i]) {
+					// result.push('I am inside of the shopify callback block '+shopifyproducts[i].product.title)
+					let newProduct = shopifyproducts[i];
+					request.post(createProductUrl, {json: newProduct, headers: shopRequestHeaders})
+	        .then(res => console.log(res));
+	        // .catch( err => console.log('\x1b[31m%s\x1b[0m', err));
+				}
       }
+			res.send("Result" + '\n' + result +
+								"Error" + '\n' + error);
       // request.post(createProductUrl, {json: newProduct, headers: shopRequestHeaders})
       // .then(res => res.send(res))
       // .catch( err => res.send(err));
     })
     .catch( err => {
-      res.status(err.statusCode).send(err.error.error_description);
+      res.status(err.statusCode).send(err.error);
     })
   } else {
     res.status(400).send('Required parameter missing');
