@@ -1,6 +1,7 @@
 const d3 = require("d3");
 // const Papa = require("papaparse");
 const fs = require('fs');
+const stopcock = require('stopcock');
 const dotenv = require('dotenv').config();
 var http = require('http');
 const express = require('express');
@@ -35,6 +36,32 @@ const getOptionValue = function(id) {
 const getOptionName = function(id){
 		return !shopifyoptionvalues[id].optioncat?"":shopifyoptionnames[shopifyoptionvalues[id].optioncat]
 }
+
+const postNewProduct = stopcock((i, createProductUrl, shopRequestHeaders)=>{
+	if(shopifyproducts[i]) {
+		// result.push('I am inside of the shopify callback block '+shopifyproducts[i].product.title)
+		let newProduct = shopifyproducts[i];
+		var date = new Date();
+		request.post(createProductUrl, {json: newProduct, headers: shopRequestHeaders})
+		.then((res) => {
+			if(res.product.id) {
+				let timestamp = date.getUTCFullYear()+'-'+(date.getUTCMonth()+1)+'-'+date.getUTCDate()+' '+(date.getUTCHours()-date.getTimezoneOffset()/60)+':'+date.getUTCMinutes()+':'+date.getUTCSeconds();
+				console.log(timestamp+' '+'Success!' + ' The index is: '+ i +'\t' + res.product.id + '\t'+res.product.title);
+				let data = {
+					"timestamp": timestamp,
+					"status": "Success!",
+					"message": res.product.id + '\t'+res.product.title
+				}
+				fs.appendFile('log.json', JSON.stringify(data), (err) => {
+								if (err) throw err;
+				})
+			}
+		})
+		.catch( err => {
+			console.log('\x1b[31m%s\x1b[0m', err);
+		});
+	}
+},{limit: 2, interval: 1000, bucketSize: 2})
 
 volusionproducts.then(function(products) {
 	var parentproductcode;
@@ -86,7 +113,7 @@ volusionproducts.then(function(products) {
 					optionname = getOptionName(optionid);
 					optionvalues.push(getOptionValue(optionid));
 				} else {
-					optionname = "";
+					optionname = "Color";
 				}
 			});
 			// optionname.then(value => console.log(value))
@@ -189,6 +216,8 @@ volusionproducts.then(function(products) {
 							"compare_at_price": product.saleprice?product.productprice:null,
 							"sku": product.productcode,
 							"inventory_quantity": product.stockstatus,
+							"inventory_management": "shopify",
+							"fulfillment_service": "manual",
 							"requires_shipping": product.freeshippingitem==="Y"?true:false
 						}
 					);
@@ -201,6 +230,8 @@ volusionproducts.then(function(products) {
 							"compare_at_price": product.saleprice?product.productprice:null,
 							"sku": product.productcode,
 							"inventory_quantity": product.stockstatus,
+							"inventory_management": "shopify",
+							"fulfillment_service": "manual",
 							"requires_shipping": product.freeshippingitem==="Y"?true:false
 						}
 					);
@@ -284,53 +315,19 @@ app.get('/shopify/callback', (req, res) => {
       const accessToken = accessTokenResponse.access_token;
       //Use access token to make API call to 'shop' endpoint
 
-      // const shopRequestUrl = 'https://' + shop + '/admin/products.json';
-      // const shopRequestHeaders = {
-      //   'X-Shopify-Access-Token': accessToken,
-      // };
-      //
-      // request.get(shopRequestUrl, {headers: shopRequestHeaders})
-      // .then( shopResponse => {
-      //   res.send(shopResponse);
-      // })
-      // const newProduct = {
-      //    "product": {
-      //       "title": "Pacsafe Cashsafe™ Anti-Theft Travel Belt Wallet",
-      //       "body_html": "<span style=\"font-family: robotomedium;\"><inline style=\"font-family: Arial;\">The Cashsafe™ anti-theft travel belt outsmarts thieves at their own game. Great for stashing extra cash and keeping it hidden from view. The Cashsafe™ has a plastic buckle which means there's no need to remove it when passing through airport security. Adjustable and easy to use, it looks like a normal belt, but it's much smarter!<\/inline><\/span>",
-      //       "product_type": "Accessories",
-      //       "vendor": "Pacsafe",
-      //       "tags": "Accessories, Travel Accessories, Pacsafe, Travel Security",
-      //       "options": [
-      //          {
-      //             "name": "Color",
-      //             "values": [
-      //                "Black"
-      //             ]
-      //          }
-      //       ]
-      //    }
-      // };
       const createProductUrl = 'https://' + shop + "/admin/products.json";
       const shopRequestHeaders = {
         'X-Shopify-Access-Token': accessToken,
+				'HTTP_X_SHOPIFY_SHOP_API_CALL_LIMIT': 80/40
       };
 			var result = new Array();
 			var error = new Array();
       for(i=0; i<shopifyproducts.length; i++)
       {
-        if(shopifyproducts[i]) {
-					// result.push('I am inside of the shopify callback block '+shopifyproducts[i].product.title)
-					let newProduct = shopifyproducts[i];
-					request.post(createProductUrl, {json: newProduct, headers: shopRequestHeaders})
-	        .then(res => console.log(res.headers["HTTP_X_SHOPIFY_SHOP_API_CALL_LIMIT"]));
-	        // .catch( err => console.log('\x1b[31m%s\x1b[0m', err));
-				}
+				postNewProduct(i, createProductUrl, shopRequestHeaders);
       }
 			res.send("Result" + '\n' + result +
 								"Error" + '\n' + error);
-      // request.post(createProductUrl, {json: newProduct, headers: shopRequestHeaders})
-      // .then(res => res.send(res))
-      // .catch( err => res.send(err));
     })
     .catch( err => {
       res.status(err.statusCode).send(err.error);
@@ -351,13 +348,3 @@ app.get("/csv", function(req, res){
 app.listen(3000, function(){
   console.log('Example app listening on port 3000!');
 })
-
-// d3.csv('/cities.csv');
-
-//
-// Papa.parse('./cities.csv', {
-//   download: true,
-//   complete: function(result) {
-//     console.log("Finished: ", result.data);
-//   }
-// });
