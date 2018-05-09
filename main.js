@@ -27,6 +27,10 @@ const shopifyoptionnames = optCat.shopifyoptionnames;
 const shopifyoptionvalues = optCat.shopifyoptionvalues;
 var shopifyproducts = new Array();
 
+var shopifycollection = require('./collection');
+console.log(shopifycollection.status);
+setTimeout(()=>{ console.log(shopifycollection.status)}, 6000);
+
 const getTag = function(id) {
 	return shopifycategory[id];
 }
@@ -41,24 +45,32 @@ const postNewProduct = stopcock((i, createProductUrl, shopRequestHeaders)=>{
 	if(shopifyproducts[i]) {
 		// result.push('I am inside of the shopify callback block '+shopifyproducts[i].product.title)
 		let newProduct = shopifyproducts[i];
-		var date = new Date();
+		let date = new Date();
+		let timestamp = date.getUTCFullYear()+'-'+(date.getUTCMonth()+1)+'-'+date.getUTCDate()+' '+(date.getUTCHours()-date.getTimezoneOffset()/60)+':'+date.getUTCMinutes()+':'+date.getUTCSeconds();
 		request.post(createProductUrl, {json: newProduct, headers: shopRequestHeaders})
 		.then((res) => {
 			if(res.product.id) {
-				let timestamp = date.getUTCFullYear()+'-'+(date.getUTCMonth()+1)+'-'+date.getUTCDate()+' '+(date.getUTCHours()-date.getTimezoneOffset()/60)+':'+date.getUTCMinutes()+':'+date.getUTCSeconds();
 				console.log(timestamp+' '+'Success!' + ' The index is: '+ i +'\t' + res.product.id + '\t'+res.product.title);
 				let data = {
 					"timestamp": timestamp,
 					"status": "Success!",
 					"message": res.product.id + '\t'+res.product.title
-				}
-				fs.appendFile('log.json', JSON.stringify(data), (err) => {
+				};
+				fs.appendFile('log.json', JSON.stringify(data)+'\n', (err) => {
 								if (err) throw err;
-				})
+				});
 			}
 		})
 		.catch( err => {
 			console.log('\x1b[31m%s\x1b[0m', err);
+			let data = {
+				"timestamp": timestamp,
+				"status": "Failed",
+				"message": err
+			};
+			fs.appendFile('err.json', JSON.stringify(data)+'\n', (err) => {
+							if (err) throw err;
+			});
 		});
 	}
 },{limit: 2, interval: 1000, bucketSize: 2})
@@ -239,7 +251,7 @@ volusionproducts.then(function(products) {
 		}
 
 	}//end of for loop
-			console.log(shopifyproducts[shopifyproducts.length-1].product.variants)
+			// console.log(shopifyproducts[shopifyproducts.length-1].product.variants)
 })// end of volusionproducts.then(function(products)
 
 
@@ -317,8 +329,7 @@ app.get('/shopify/callback', (req, res) => {
 
       const createProductUrl = 'https://' + shop + "/admin/products.json";
       const shopRequestHeaders = {
-        'X-Shopify-Access-Token': accessToken,
-				'HTTP_X_SHOPIFY_SHOP_API_CALL_LIMIT': 80/40
+        'X-Shopify-Access-Token': accessToken
       };
 			var result = new Array();
 			var error = new Array();
@@ -343,6 +354,18 @@ app.get("/", function(req, res){
 
 app.get("/csv", function(req, res){
   res.sendFile('/cities.csv', {root: __dirname + '/public'})
+})
+
+app.get("/Categories", function(req, res){
+  res.sendFile('/Categories.csv', {root: __dirname + '/public'})
+})
+
+app.get("/Options", function(req, res){
+  res.sendFile('/Options.csv', {root: __dirname + '/public'})
+})
+
+app.get("/OptionCategories", function(req, res){
+  res.sendFile('/OptionCategories.csv', {root: __dirname + '/public'})
 })
 
 app.listen(3000, function(){
