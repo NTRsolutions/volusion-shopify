@@ -28,8 +28,8 @@ const shopifyoptionvalues = optCat.shopifyoptionvalues;
 var shopifyproducts = new Array();
 
 var shopifycollection = require('./collection');
-console.log(shopifycollection.status);
-setTimeout(()=>{ console.log(shopifycollection.status)}, 6000);
+setTimeout(()=>{ console.log(shopifycollection.url)}, 6000);
+
 
 const getTag = function(id) {
 	return shopifycategory[id];
@@ -73,7 +73,43 @@ const postNewProduct = stopcock((i, createProductUrl, shopRequestHeaders)=>{
 			});
 		});
 	}
+},{limit: 2, interval: 1000, bucketSize: 2});
+
+const shopifyPostNew = stopcock((items, postNewURL, requestHeaders)=>{
+	if(!Array.isArray(items)) throw new TypeError('The first parameter has to be an array.');
+	for(i=0; i<items.length; i++) {
+		let newItem = items[i];
+		let date = new Date();
+		let timestamp = date.getUTCFullYear()+'-'+(date.getUTCMonth()+1)+'-'+date.getUTCDate()+' '+(date.getUTCHours()-date.getTimezoneOffset()/60)+':'+date.getUTCMinutes()+':'+date.getUTCSeconds();
+		request.post(postNewURL, {json: newItem, headers: requestHeaders})
+		.then((res) => {
+			if(res.smart_collection.id) {
+				console.log(timestamp+' '+'Success!' + ' The index is: '+ i +'\t' + res.smart_collection.id + '\t'+res.smart_collection.title);
+				let data = {
+					"timestamp": timestamp,
+					"status": "Success!",
+					"message": res.smart_collection.id + '\t'+res.smart_collection.title
+				};
+				fs.appendFile('log.json', JSON.stringify(data)+'\n', (err) => {
+								if (err) throw err;
+				});
+			}
+		})
+		.catch( err => {
+			console.log('\x1b[31m%s\x1b[0m', err);
+			let data = {
+				"timestamp": timestamp,
+				"status": "Failed",
+				"message": err
+			};
+			fs.appendFile('err.json', JSON.stringify(data)+'\n', (err) => {
+							if (err) throw err;
+			});
+		});
+	}
 },{limit: 2, interval: 1000, bucketSize: 2})
+
+
 
 volusionproducts.then(function(products) {
 	var parentproductcode;
@@ -261,6 +297,9 @@ app.use("/public", express.static(__dirname + "/public"));
 //intall route
 app.get('/shopify', (req, res) => {
   const shop = req.query.shop;
+	fs.appendFile('./.env', 'SHOPIFY_SHOP: '+req.query.shop+'\n', (err) => {
+		if(err) throw err;
+	})
   if(shop) {
     const state = nonce(); //what does nonce() do?
     const redirectUri  = forwardingAddress + '/shopify/callback';
@@ -327,16 +366,18 @@ app.get('/shopify/callback', (req, res) => {
       const accessToken = accessTokenResponse.access_token;
       //Use access token to make API call to 'shop' endpoint
 
-      const createProductUrl = 'https://' + shop + "/admin/products.json";
+      // const createProductUrl = 'https://' + shop + "/admin/products.json";
+
       const shopRequestHeaders = {
         'X-Shopify-Access-Token': accessToken
       };
 			var result = new Array();
 			var error = new Array();
-      for(i=0; i<shopifyproducts.length; i++)
-      {
-				postNewProduct(i, createProductUrl, shopRequestHeaders);
-      }
+      // for(i=0; i<shopifyproducts.length; i++)
+      // {
+			// 	postNewProduct(i, createProductUrl, shopRequestHeaders);
+      // }
+			shopifyPostNew(shopifycollection.collections, shopifycollection.url, shopRequestHeaders);
 			res.send("Result" + '\n' + result +
 								"Error" + '\n' + error);
     })
