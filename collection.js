@@ -2,15 +2,17 @@ const d3 = require('d3');
 const dotenv = require('dotenv').config();
 
 const forwardingAddress = process.env.SHOPIFY_APP_HOST;
+var _self =this;
 
-let volusioncategory = d3.csv(forwardingAddress+'/Categories');
-let shopifycollection = new Array();
-var status = false;
+var volusioncategory = d3.csv(forwardingAddress+'/Categories');
+var collections = new Array();
+var shopName = 'kjamson.myshopify.com'
+var url = "https://" + shopName + "/admin/smart_collections.json";
 
 volusioncategory.then(function (categories) {
   for(i=0;i<categories.length;i++){
     category = categories[i];
-    shopifycollection.push(
+    collections.push(
     {
       "smart_collection": {
         "title": category.categoryname,
@@ -52,12 +54,9 @@ volusioncategory.then(function (categories) {
       }
     });
   } //end of for loop
-  console.log(shopifycollection[0]);
-  status = true;
-})
-
+}); //end of catefory then
 
 module.exports = {
-  shopifycollection,
-  status
+  collections,
+  url
 };
