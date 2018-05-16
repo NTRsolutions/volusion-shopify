@@ -24,12 +24,17 @@ var financialStatus = function(order) {
     return "refunded"
   } else if( order.total_payment_authorized !== 0 && order.total_payment_received === 0) {
     return "authorized";
-  } else if( order.total_payment_authorized === 0 ) {
+  } else if( order.total_payment_authorized === 0 && order.total_payment_received === 0 ) {
     return "voided";
-  }
+  } else return "paid";
 }
 
+
 volusionorderdetails.then(function (orders) {
+  //TODO:
+  // 1. Add the couponcode
+  // 2. identify the disconttyep
+  // 3. Add the discountvalue
   for(i=0; i<orders.length; i++){
     let order = orders[i];
 	let option = order.options.split(":")[1];
@@ -142,6 +147,7 @@ volusionordercustomers.then(function (orders) {
         }
       });
       for(i=0; i<orderDetails[order.orderid].products.length; i++) {
+        //TODO: 1. Add the sku
         let orderProduct = orderDetails[order.orderid].products[i];
 		shopifyorders[shopifyorders.length-1].order.line_items = new Array();
         shopifyorders[shopifyorders.length-1].order.line_items.push({
