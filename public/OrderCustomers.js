@@ -38,21 +38,22 @@ volusionorderdetails.then(function (orders) {
 
 volusionordercustomers.then(function (orders) {
   orders.forEach(function(order){
+      let total_discount;
       shopifyorders.push(
       {
         "order": {
           "note": order.order_comments,
           "order_number": order.orderid,
           "number": order.orderid,
-          "total_price": "",
-          "subtotal": "",
-          "total_tax": "",
+          "total_price": order.paymentamount,
+          "subtotal": order.affiliate_commissionable_value,
+          "total_tax": order.salestax1,
           "currency": "CAD",
           "financial_status": "",
-          "processed_at": "",
-          "total_discount": "",
+          "processed_at": order.orderdate,
+          "total_discount": "",   //discount comes with individule product. Fetch it from the orderdetails
           "total_line_items_price": "",
-          "canncelled_at": "",//may be can imported canncled Orders
+          "canncelled_at": order.orderdate, if order.orderstatus==Canncled //may be can importe canncled Orders
           "discount_application": [],
           "tax_lines": [
             {
