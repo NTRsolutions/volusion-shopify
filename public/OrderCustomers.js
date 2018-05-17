@@ -29,6 +29,37 @@ var financialStatus = function(order) {
   } else return "paid";
 }
 
+var discountType = function(type) {
+  switch(type) {
+    case 1:
+      return "fixed_amount";
+      break;
+    case 2:
+      return "fixed_amount";
+      break;
+    case 3:
+      return "percentage";
+      break;
+    case 4:
+      return "percentage";
+  }
+}
+
+var allocationMethod = function(type) {
+  switch (type) {
+    case 1:
+      return "one";
+      break;
+    case 2:
+      return "across";
+      break;
+    case 3:
+      return "one";
+      break;
+    case 4:
+      return "across";
+  }
+}
 
 volusionorderdetails.then(function (orders) {
   //TODO:
@@ -37,9 +68,9 @@ volusionorderdetails.then(function (orders) {
   // 3. Add the discountvalue
   for(i=0; i<orders.length; i++){
     let order = orders[i];
-	let option = order.options.split(":")[1];
+    let option = order.options.split(":")[1];
     let length = option?option.length-1:0;
-	option = option?option.substring(0, length):"";
+    option = option?option.substring(0, length):"";
     //if this order has more than one item
     if(orderDetails[order.orderid]) {
       orderDetails[order.orderid].products.push({
@@ -50,8 +81,20 @@ volusionorderdetails.then(function (orders) {
         "totalPrice": order.totalprice,
         "option": option
       });
+      if(order.couponcode) {
+        orderDetails.discount_application.push({
+          "type": "discount_code",
+          "code": order.couponcode,
+          "value": order.discountvalue,
+          "value_type": discountType(order.discounttype),
+          "allocation_method": allocationMethod(order.discounttype),
+          "target_selection": "all",
+          "target_type": "line_item"
+        })
+      }
     }
     else {  //it could be first item in the order or the only item the order
+      orderDetails[order.orderid].discount_application = new Array();
       orderDetails[order.orderid] = {
         "products": [
           {
