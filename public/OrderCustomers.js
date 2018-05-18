@@ -26,7 +26,9 @@ var financialStatus = function(order) {
     return "authorized";
   } else if( order.total_payment_authorized === 0 && order.total_payment_received === 0 ) {
     return "voided";
-  } else return "paid";
+  } else if(order.total_payment_received!== roder.total_payment_authorized){
+    return "partially_paid";
+  }else return "paid";
 }
 
 var discountType = function(type) {
@@ -77,7 +79,7 @@ volusionorderdetails.then(function (orders) {
         orderDetails[order.orderid].products.push({
           "sku": order.productcode,
           "price": order.productprice,
-          "qty": order.quantity,
+          "quantity": order.quantity,
           "title": order.productname,
           "totalPrice": order.totalprice,
           "option": option
@@ -132,6 +134,7 @@ volusionordercustomers.then(function (orders) {
           "total_line_items_price": "",
           "canncelled_at": cancelledDate(order), //equals to orderdate if order status is Cancelled
           "discount_application": orderDetails[order.orderid].discount_application,
+          "browser_ip": order.customer_ipaddress,
           "tax_lines": [
             {
               "title": order.tax1_title,
@@ -194,6 +197,7 @@ volusionordercustomers.then(function (orders) {
         //TODO: 1. Add the sku
         let orderProduct = orderDetails[order.orderid].products[i];
         let currentShopifyOrder = shopifyorders[shopifyorders.length-1];
+        currentShopifyOrder.order.total_line_items_price += parseFloat(orderProduct.totalPrice);
         currentShopifyOrder.order.line_items = new Array();
         currentShopifyOrder.order.line_items.push({
           "title": orderProduct.title,
