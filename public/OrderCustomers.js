@@ -12,7 +12,7 @@ var shopifyorders = new Array();
 
 var cancelledDate = function(order) {
   if(order.orderstatus === "Cancelled") {
-    return order.orderdate;
+    return new Date(order.orderdate);
   }
   else return "";
 }
@@ -26,7 +26,7 @@ var financialStatus = function(order) {
     return "authorized";
   } else if( order.total_payment_authorized === 0 && order.total_payment_received === 0 ) {
     return "voided";
-  } else if(order.total_payment_received!== roder.total_payment_authorized){
+  } else if(order.total_payment_received!== order.total_payment_authorized){
     return "partially_paid";
   }else return "paid";
 }
@@ -65,9 +65,6 @@ var allocationMethod = function(type) {
 
 volusionorderdetails.then(function (orders) {
   //TODO:
-  // 1. Add the couponcode
-  // 2. identify the disconttyep
-  // 3. Add the discountvalue
   for(i=0; i<orders.length; i++){
     let order = orders[i];
     let option = order.options.split(":")[1];
@@ -79,9 +76,10 @@ volusionorderdetails.then(function (orders) {
         orderDetails[order.orderid].products.push({
           "sku": order.productcode,
           "price": order.productprice,
-          "quantity": order.quantity,
+          "qty": parseInt(order.quantity),
           "title": order.productname,
           "totalPrice": order.totalprice,
+          "fulfillable_quantity": parseInt(order.qtyshipped),
           "option": option
         });
       }
@@ -103,9 +101,10 @@ volusionorderdetails.then(function (orders) {
           {
             "sku": order.productcode,
             "price": order.productprice,
-            "qty": order.quantity,
+            "qty": parseInt(order.quantity),
             "title": order.productname,
             "totalPrice": order.totalprice,
+            "fulfillable_quantity": parseInt(order.qtyshipped),
             "option": option
           }
         ],
@@ -129,19 +128,12 @@ volusionordercustomers.then(function (orders) {
           "total_tax": order.salestax1,
           "currency": "CAD",
           "financial_status": financialStatus(order),
-          "processed_at": order.orderdate,
+          "processed_at": new Date(order.orderdate),
           "total_discounts": "",
           "total_line_items_price": "",
           "canncelled_at": cancelledDate(order), //equals to orderdate if order status is Cancelled
           "discount_application": orderDetails[order.orderid].discount_application,
           "browser_ip": order.customer_ipaddress,
-          "tax_lines": [
-            {
-              "title": order.tax1_title,
-              "price": order.salestax1,
-              "rate": order.salestaxrate1
-            }
-          ],
           "shipping_lines": [
             {
               "title": shippingMethod[order.shippingmethodid]?shippingMethod[order.shippingmethodid].title:"Shipping Method #"+order.shippingmethodid,
@@ -154,7 +146,6 @@ volusionordercustomers.then(function (orders) {
             "first_name": order.billingfirstname,
             "last_name": order.billinglastname,
             "email": order.creditcardauthorizationnumber,
-            "phone": order.billingphonenumber,
             "verified_email": true,
             "addresses": [
               {
@@ -194,7 +185,7 @@ volusionordercustomers.then(function (orders) {
         }
       });
       for(i=0; i<orderDetails[order.orderid].products.length; i++) {
-        //TODO: 1. Add the sku
+        //TODO: 1.
         let orderProduct = orderDetails[order.orderid].products[i];
         let currentShopifyOrder = shopifyorders[shopifyorders.length-1];
         currentShopifyOrder.order.total_line_items_price += parseFloat(orderProduct.totalPrice);
@@ -205,6 +196,9 @@ volusionordercustomers.then(function (orders) {
           "sku": orderProduct.sku,
           "price": orderProduct.totalPrice,
           "taxable": true,
+          "fulfillable_quantity": orderProduct.fulfillable_quantity,
+          "fulfillment_service": "manual",
+          "fulfillment_status": orderProduct.qty!==0?"fulfilled":"null",
           "name": orderProduct.option,
           "tax_lines": [  //individule item tax
             {
