@@ -8,10 +8,10 @@
       "total_tax": "0.05",
       "currency": "CAD",
       "financial_status": "voided",
-      "processed_at": "5/20/2014 17:44",
-      "total_discounts": "", 
-      "total_line_items_price": "",
-      "canncelled_at": "5/20/2014 17:44",
+      "processed_at": "2014-05-20T21:44:00.000Z",
+      "total_discounts": "",
+      "total_line_items_price": "34.99",
+      "canncelled_at": "2014-05-20T21:44:00.000Z",
       "discount_application": [
          {
             "type": "discount_code",
@@ -23,13 +23,7 @@
             "target_type": "line_item"
          }
       ],
-      "tax_lines": [
-         {
-            "title": "HST (13%)",
-            "price": "0.05",
-            "rate": "0.13"
-         }
-      ],
+      "browser_ip": "199.21.150.62",
       "shipping_lines": [
          {
             "title": "Canada Post Expedited",
@@ -42,7 +36,6 @@
          "first_name": "Vivian",
          "last_name": "Kan",
          "email": "vivianwkan@gmail.com",
-         "phone": "4168379355",
          "verified_email": true,
          "addresses": [
             {
@@ -82,9 +75,13 @@
       "line_items": [
          {
             "title": "Jansport Superbreak Backpack - 008-Black",
-            "quantity": "0",
+            "quantity": 0,
+            "sku": "T501-008",
             "price": "34.99",
             "taxable": true,
+            "fulfillable_quantity": 0,
+            "fulfillment_service": "manual",
+            "fulfillment_status": "null",
             "name": "",
             "tax_lines": [
                {
