@@ -31,32 +31,32 @@ var financialStatus = function(order) {
 
 var discountType = function(type) {
   switch(type) {
-    case 1:
+    case '1':
       return "fixed_amount";
       break;
-    case 2:
+    case '2':
       return "fixed_amount";
       break;
-    case 3:
+    case '3':
       return "percentage";
       break;
-    case 4:
+    case '4':
       return "percentage";
   }
 }
 
 var allocationMethod = function(type) {
   switch (type) {
-    case 1:
+    case '1':
       return "one";
       break;
-    case 2:
+    case '2':
       return "across";
       break;
-    case 3:
+    case '3':
       return "one";
       break;
-    case 4:
+    case '4':
       return "across";
   }
 }
@@ -73,16 +73,18 @@ volusionorderdetails.then(function (orders) {
     option = option?option.substring(0, length):"";
     //if this order has more than one item
     if(orderDetails[order.orderid]) {
-      orderDetails[order.orderid].products.push({
-        "sku": order.productcode,
-        "price": order.productprice,
-        "qty": order.quantity,
-        "title": order.productname,
-        "totalPrice": order.totalprice,
-        "option": option
-      });
-      if(order.couponcode) {
-        orderDetails.discount_application.push({
+      if(order.productcode.indexOf("DSC-") === -1) {
+        orderDetails[order.orderid].products.push({
+          "sku": order.productcode,
+          "price": order.productprice,
+          "qty": order.quantity,
+          "title": order.productname,
+          "totalPrice": order.totalprice,
+          "option": option
+        });
+      }
+      else if(order.couponcode) {
+        orderDetails[order.orderid].discount_application.push({
           "type": "discount_code",
           "code": order.couponcode,
           "value": order.discountvalue,
@@ -94,7 +96,6 @@ volusionorderdetails.then(function (orders) {
       }
     }
     else {  //it could be first item in the order or the only item the order
-      orderDetails[order.orderid].discount_application = new Array();
       orderDetails[order.orderid] = {
         "products": [
           {
@@ -105,7 +106,8 @@ volusionorderdetails.then(function (orders) {
             "totalPrice": order.totalprice,
             "option": option
           }
-        ]
+        ],
+        "discount_application": []
       }
     }
   }
@@ -115,7 +117,6 @@ volusionordercustomers.then(function (orders) {
   for(index=0; index<orders.length; index++){
       let order = orders[index];
       let total_discount;
-      let currentShopifyOrder = shopifyorders[shopifyorders.length-1];
       shopifyorders.push({
         "order": {
           "note": order.order_comments,
@@ -127,10 +128,10 @@ volusionordercustomers.then(function (orders) {
           "currency": "CAD",
           "financial_status": financialStatus(order),
           "processed_at": order.orderdate,
-          "total_discount": "",   //discount comes with individule product. Fetch it from the orderdetails
+          "total_discounts": "",
           "total_line_items_price": "",
           "canncelled_at": cancelledDate(order), //equals to orderdate if order status is Cancelled
-          "discount_application": [],
+          "discount_application": orderDetails[order.orderid].discount_application,
           "tax_lines": [
             {
               "title": order.tax1_title,
@@ -192,10 +193,12 @@ volusionordercustomers.then(function (orders) {
       for(i=0; i<orderDetails[order.orderid].products.length; i++) {
         //TODO: 1. Add the sku
         let orderProduct = orderDetails[order.orderid].products[i];
-		shopifyorders[shopifyorders.length-1].order.line_items = new Array();
-        shopifyorders[shopifyorders.length-1].order.line_items.push({
+        let currentShopifyOrder = shopifyorders[shopifyorders.length-1];
+        currentShopifyOrder.order.line_items = new Array();
+        currentShopifyOrder.order.line_items.push({
           "title": orderProduct.title,
           "quantity": orderProduct.qty,
+          "sku": orderProduct.sku,
           "price": orderProduct.totalPrice,
           "taxable": true,
           "name": orderProduct.option,

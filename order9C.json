@@ -1,0 +1,99 @@
+{
+   "order": {
+      "note": "",
+      "order_number": "9",
+      "number": "9",
+      "total_price": "10.08",
+      "subtotal": "0.35",
+      "total_tax": "0.05",
+      "currency": "CAD",
+      "financial_status": "voided",
+      "processed_at": "5/20/2014 17:44",
+      "total_discounts": "", 
+      "total_line_items_price": "",
+      "canncelled_at": "5/20/2014 17:44",
+      "discount_application": [
+         {
+            "type": "discount_code",
+            "code": "SP01",
+            "value": "99",
+            "value_type": "percentage",
+            "allocation_method": "across",
+            "target_selection": "all",
+            "target_type": "line_item"
+         }
+      ],
+      "tax_lines": [
+         {
+            "title": "HST (13%)",
+            "price": "0.05",
+            "rate": "0.13"
+         }
+      ],
+      "shipping_lines": [
+         {
+            "title": "Canada Post Expedited",
+            "price": "9.68",
+            "code": "302",
+            "source": "CANADAPOST"
+         }
+      ],
+      "customer": {
+         "first_name": "Vivian",
+         "last_name": "Kan",
+         "email": "vivianwkan@gmail.com",
+         "phone": "4168379355",
+         "verified_email": true,
+         "addresses": [
+            {
+               "address1": "310 Holmes Ave.",
+               "address2": "",
+               "city": "North York",
+               "company": "",
+               "province": "ON",
+               "zip": "M2N4N3",
+               "country": "Canada"
+            }
+         ]
+      },
+      "billing_address": {
+         "first_name": "Vivian",
+         "last_name": "Kan",
+         "address1": "310 Holmes Ave.",
+         "address2": "",
+         "city": "North York",
+         "company": "",
+         "province": "ON",
+         "zip": "M2N4N3",
+         "country": "Canada"
+      },
+      "shipping_address": {
+         "first_name": "Vivian",
+         "last_name": "Kan",
+         "address1": "200 Windflower Gate. 201",
+         "address2": "",
+         "city": "Woodbridge",
+         "company": "",
+         "province": "ON",
+         "zip": "l4l9l3",
+         "country": "Canada"
+      },
+      "email": "vivianwkan@gmail.com",
+      "line_items": [
+         {
+            "title": "Jansport Superbreak Backpack - 008-Black",
+            "quantity": "0",
+            "price": "34.99",
+            "taxable": true,
+            "name": "",
+            "tax_lines": [
+               {
+                  "title": "HST (13%)",
+                  "price": 4.55,
+                  "rate": "0.13"
+               }
+            ]
+         }
+      ]
+   }
+}

@@ -1,0 +1,218 @@
+{
+            "id": 362954358837,
+            "email": "vivianwkan@gmail.com",
+            "closed_at": null,
+            "created_at": "2018-04-23T07:33:33-12:00",
+            "updated_at": "2018-04-23T07:33:35-12:00",
+            "number": 9,
+            "note": null,
+            "token": "c9840288f333995b051dfcb2989f9796",
+            "gateway": "",
+            "test": false,
+            "total_price": "10.08",
+            "subtotal_price": "0.35",
+            "total_weight": null,
+            "total_tax": "0.05",
+            "taxes_included": false,
+            "currency": "CAD",
+            "financial_status": "voided",
+            "confirmed": true,
+            "total_discounts": "34.64",
+            "total_line_items_price": "34.99",
+            "cart_token": null,
+            "buyer_accepts_marketing": false,
+            "name": "#1009",
+            "referring_site": null,
+            "landing_site": null,
+            "cancelled_at": null,
+            "cancel_reason": null,
+            "total_price_usd": "7.89",
+            "checkout_token": null,
+            "reference": null,
+            "user_id": null,
+            "location_id": null,
+            "source_identifier": null,
+            "source_url": null,
+            "processed_at": "2014-05-20T05:44:00-12:00",
+            "device_id": null,
+            "phone": null,
+            "customer_locale": null,
+            "app_id": 437349,
+            "browser_ip": null,
+            "landing_site_ref": null,
+            "order_number": 1009,
+            "discount_codes": [
+                {
+                    "code": "SP01",
+                    "amount": "34.64",
+                    "type": "fixed_amount"
+                }
+            ],
+            "note_attributes": [],
+            "payment_gateway_names": [],
+            "processing_method": "",
+            "checkout_id": null,
+            "source_name": "437349",
+            "fulfillment_status": null,
+            "tax_lines": [
+                {
+                    "title": "Tax",
+                    "price": "5.00",
+                    "rate": 0.14286
+                }
+            ],
+            "tags": "",
+            "contact_email": "vivianwkan@gmail.com",
+            "order_status_url": "https://checkout.shopify.com/2169405493/orders/c9840288f333995b051dfcb2989f9796/authenticate?key=4564e5959d4bf856a9a6d8f99286a923",
+            "discount_applications": [
+                {
+                    "type": "manual",
+                    "value": "34.64",
+                    "value_type": "fixed_amount",
+                    "allocation_method": "across",
+                    "target_selection": "all",
+                    "target_type": "line_item",
+                    "description": null,
+                    "title": null
+                }
+            ],
+            "admin_graphql_api_id": "gid://shopify/Order/362954358837",
+            "line_items": [
+                {
+                    "id": 776494481461,
+                    "variant_id": null,
+                    "title": "Jansport Superbreak Backpack - 008-Black",
+                    "quantity": 1,
+                    "price": "34.99",
+                    "sku": "T501-008",
+                    "variant_title": null,
+                    "vendor": null,
+                    "fulfillment_service": "manual",
+                    "product_id": null,
+                    "requires_shipping": true,
+                    "taxable": true,
+                    "gift_card": false,
+                    "name": "Jansport Superbreak Backpack - 008-Black",
+                    "variant_inventory_management": null,
+                    "properties": [],
+                    "product_exists": false,
+                    "fulfillable_quantity": 1,
+                    "grams": 0,
+                    "total_discount": "0.00",
+                    "fulfillment_status": null,
+                    "discount_amounts": [
+                        {
+                            "amount": "34.64",
+                            "discount_application_index": 0
+                        }
+                    ],
+                    "discount_allocations": [
+                        {
+                            "amount": "34.64",
+                            "discount_application_index": 0
+                        }
+                    ],
+                    "admin_graphql_api_id": "gid://shopify/LineItem/776494481461",
+                    "tax_lines": [
+                        {
+                            "title": "Tax",
+                            "price": "5.00",
+                            "rate": 0.14286
+                        }
+                    ]
+                }
+            ],
+            "shipping_lines": [
+                {
+                    "id": 279464902709,
+                    "title": "Shipping Method #302",
+                    "price": "9.68",
+                    "code": "Shipping Method #302",
+                    "source": "shopify",
+                    "phone": null,
+                    "requested_fulfillment_service_id": null,
+                    "delivery_category": null,
+                    "carrier_identifier": null,
+                    "discounted_price": "9.68",
+                    "discount_amounts": [],
+                    "discount_allocations": [],
+                    "tax_lines": []
+                }
+            ],
+            "billing_address": {
+                "first_name": "Vivian",
+                "address1": "310 Holmes Ave.",
+                "phone": "4168379355",
+                "city": "North York",
+                "zip": "M2N4N3",
+                "province": "Ontario",
+                "country": "Canada",
+                "last_name": "Kan",
+                "address2": "",
+                "company": "",
+                "latitude": 43.7829765,
+                "longitude": -79.3924783,
+                "name": "Vivian Kan",
+                "country_code": "CA",
+                "province_code": "ON"
+            },
+            "shipping_address": {
+                "first_name": "Vivian",
+                "address1": "200 Windflower Gate. 201",
+                "phone": "9058512001",
+                "city": "Woodbridge",
+                "zip": "M2N4N3",
+                "province": "Ontario",
+                "country": "Canada",
+                "last_name": "Kan",
+                "address2": "",
+                "company": "",
+                "latitude": null,
+                "longitude": null,
+                "name": "Vivian Kan",
+                "country_code": "CA",
+                "province_code": "ON"
+            },
+            "fulfillments": [],
+            "refunds": [],
+            "customer": {
+                "id": 437392146485,
+                "email": "vivianwkan@gmail.com",
+                "accepts_marketing": false,
+                "created_at": "2018-04-23T07:12:39-12:00",
+                "updated_at": "2018-04-23T07:33:33-12:00",
+                "first_name": "Vivian",
+                "last_name": "Kan",
+                "orders_count": 2,
+                "state": "disabled",
+                "total_spent": "0.00",
+                "last_order_id": 362954358837,
+                "note": null,
+                "verified_email": true,
+                "multipass_identifier": null,
+                "tax_exempt": false,
+                "phone": "+14168379355",
+                "tags": "11",
+                "last_order_name": "#1009",
+                "admin_graphql_api_id": "gid://shopify/Customer/437392146485",
+                "default_address": {
+                    "id": 483408412725,
+                    "customer_id": 437392146485,
+                    "first_name": "Vivian",
+                    "last_name": "Kan",
+                    "company": "",
+                    "address1": "200 Windflower Gate. 201",
+                    "address2": "",
+                    "city": "Woodbridge",
+                    "province": "Ontario",
+                    "country": "Canada",
+                    "zip": "M2N4N3",
+                    "phone": "9058512001",
+                    "name": "Vivian Kan",
+                    "province_code": "ON",
+                    "country_code": "CA",
+                    "country_name": "Canada",
+                    "default": true
+                }
+            }
+        }
