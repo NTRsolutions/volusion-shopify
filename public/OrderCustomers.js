@@ -76,7 +76,7 @@ volusionorderdetails.then(function (orders) {
         orderDetails[order.orderid].products.push({
           "sku": order.productcode,
           "price": order.productprice,
-          "qty": parseInt(order.quantity),
+          "qty": parseInt(order.quantity)===0?1:parseInt(order.quantity),
           "title": order.productname,
           "totalPrice": order.totalprice,
           "fulfillable_quantity": parseInt(order.qtyshipped),
@@ -84,14 +84,18 @@ volusionorderdetails.then(function (orders) {
         });
       }
       else if(order.couponcode) {
-        orderDetails[order.orderid].discount_application.push({
-          "type": "discount_code",
-          "code": order.couponcode,
-          "value": order.discountvalue,
-          "value_type": discountType(order.discounttype),
-          "allocation_method": allocationMethod(order.discounttype),
+        orderDetails[order.orderid].discount_applications.push({
+          "type": "manual",
+          "value": order.totalprice.split('-')[1],
+          "value_type": "fixed_amount",
+          "allocation_method": "acroos",
           "target_selection": "all",
           "target_type": "line_item"
+        });
+        orderDetails[order.orderid].discount_codes.push({
+          "code": order.couponcode,
+          "amount": order.totalprice.split('-')[1],
+          "type": "fixed_amount"
         })
       }
     }
@@ -101,14 +105,15 @@ volusionorderdetails.then(function (orders) {
           {
             "sku": order.productcode,
             "price": order.productprice,
-            "qty": parseInt(order.quantity),
+            "qty": parseInt(order.quantity)===0?1:parseInt(order.quantity),
             "title": order.productname,
             "totalPrice": order.totalprice,
             "fulfillable_quantity": parseInt(order.qtyshipped),
             "option": option
           }
         ],
-        "discount_application": []
+        "discount_applications": [],
+        "discount_codes": []
       }
     }
   }
@@ -129,11 +134,19 @@ volusionordercustomers.then(function (orders) {
           "currency": "CAD",
           "financial_status": financialStatus(order),
           "processed_at": new Date(order.orderdate),
-          "total_discounts": "",
+          "total_discounts": orderDetails[order.orderid].discount_applications[0]?orderDetails[order.orderid].discount_applications[0].value:"",
           "total_line_items_price": "",
           "canncelled_at": cancelledDate(order), //equals to orderdate if order status is Cancelled
-          "discount_application": orderDetails[order.orderid].discount_application,
+          "discount_applications": orderDetails[order.orderid].discount_applications,
+          "discount_codes": orderDetails[order.orderid].discount_codes,
           "browser_ip": order.customer_ipaddress,
+          "tax_lines": [  //individule item tax
+            {
+              "title": order.tax1_title,
+              "price": Math.round(order.affiliate_commissionable_value*order.salestaxrate1*100)/100,
+              "rate": order.salestaxrate1
+            }
+          ],
           "shipping_lines": [
             {
               "title": shippingMethod[order.shippingmethodid]?shippingMethod[order.shippingmethodid].title:"Shipping Method #"+order.shippingmethodid,
@@ -199,14 +212,7 @@ volusionordercustomers.then(function (orders) {
           "fulfillable_quantity": orderProduct.fulfillable_quantity,
           "fulfillment_service": "manual",
           "fulfillment_status": orderProduct.qty!==0?"fulfilled":"null",
-          "name": orderProduct.option,
-          "tax_lines": [  //individule item tax
-            {
-              "title": order.tax1_title,
-              "price": Math.round(orderProduct.totalPrice*order.salestaxrate1*100)/100,
-              "rate": order.salestaxrate1
-            }
-          ]
+          "name": orderProduct.option
         });
       }
   }
