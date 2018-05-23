@@ -30,6 +30,11 @@ var shopifyproducts = new Array();
 var shopifycollection = require('./collection');
 setTimeout(()=>{ console.log(shopifycollection.url)}, 6000);
 
+var shopifyorders = require('./order');
+
+console.log("test");
+setTimeout(()=>{ console.log(shopifyorders.length); }, 21492);
+
 
 const getTag = function(id) {
 	return shopifycategory[id];
@@ -399,6 +404,18 @@ app.get("/csv", function(req, res){
 
 app.get("/Categories", function(req, res){
   res.sendFile('/Categories.csv', {root: __dirname + '/public'})
+})
+
+app.get("/Customers", function(req, res){
+  res.sendFile('/Customers.csv', {root: __dirname + '/public'})
+})
+
+app.get("/OrderDetails", function(req, res){
+  res.sendFile('/OrderDetails.csv', {root: __dirname + '/public'})
+})
+
+app.get("/Orders", function(req, res){
+  res.sendFile('/Orders.csv', {root: __dirname + '/public'})
 })
 
 app.get("/Options", function(req, res){
